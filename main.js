@@ -98,13 +98,13 @@ function createLabeledBuilding(x, z, label, logoURL = null) {
 }
 
 // Add Buildings
-createLabeledBuilding(-20, -10, 'Accenture', 'static/accenture-logo.png');
+createLabeledBuilding(-20, -10, 'Accenture', './static/accenture-logo.png');
 createLabeledBuilding(0, -10, 'Travelexic');
 createLabeledBuilding(20, -10, 'Digital Product School');
 createLabeledBuilding(0, 10, 'Workroom Automation');
 
 
-loader.load('static/models/modern_office_building/scene.gltf', function ( gltf ) {
+loader.load('./static/models/modern_office_building/scene.gltf', function ( gltf ) {
 
   gltf.scene.scale.set(30, 30, 30);
   gltf.scene.position.set(0, 0, 0);
