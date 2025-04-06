@@ -98,10 +98,10 @@ function createLabeledBuilding(x, z, label, logoURL = null) {
 }
 
 // Add Buildings
-createLabeledBuilding(-20, -10, 'Accenture', './static/accenture-logo.png');
-createLabeledBuilding(0, -10, 'Travelexic');
-createLabeledBuilding(20, -10, 'Digital Product School');
-createLabeledBuilding(0, 10, 'Workroom Automation');
+// createLabeledBuilding(-20, -10, 'Accenture', './static/accenture-logo.png');
+// createLabeledBuilding(0, -10, 'Travelexic');
+// createLabeledBuilding(20, -10, 'Digital Product School');
+// createLabeledBuilding(0, 10, 'Workroom Automation');
 
 
 loader.load('./static/models/modern_office_building/scene.gltf', function ( gltf ) {
@@ -159,9 +159,12 @@ function createTree(x, z) {
 }
 
 // Roads
-createStraightRoad(0, 0, 60);           // horizontal main road
+createStraightRoad(0, 0, 200);           // horizontal main road
 createStraightRoad(0, -10, 30, false);  // to bottom buildings
 createStraightRoad(0, 10, 30, false);   // to top buildings
+createStraightRoad(40, 0, 50, false);
+createStraightRoad(-40, 0, 50, false);
+createStraightRoad(-80, 0, 50, false);
 createCurvedRoad(0, 20, 20, Math.PI, Math.PI * 1.5);
 
 function createStraightRoad(x, z, length, isHorizontal = true) {
