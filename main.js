@@ -117,6 +117,26 @@ loader.load('./static/models/modern_office_building/scene.gltf', function ( gltf
 
 } );
 
+let mixer;
+
+loader.load('./static/models/man_waving_hand/scene.gltf', function (gltf) {
+
+  const model = gltf.scene;
+  model.scale.set(5, 5, 5);
+  model.position.set(50, 0, 0);
+  scene.add(model);
+
+  // Create the animation mixer and play the first animation
+  mixer = new THREE.AnimationMixer(model);
+
+  gltf.animations.forEach((clip) => {
+    mixer.clipAction(clip).play();
+  });
+
+}, undefined, function (error) {
+  console.error(error);
+});
+
 // Trees
 for (let i = -40; i <= 40; i += 10) {
   createTree(i, -25);
@@ -174,13 +194,23 @@ function createCurvedRoad(centerX, centerZ, radius, startAngle, endAngle) {
   });
 }
 
+
+const clock = new THREE.Clock();
+
 // Animate
 function animate() {
   requestAnimationFrame(animate);
   controls.update();
+
+  const delta = clock.getDelta();
+
+  if (mixer) mixer.update(delta);
+
+  
   renderer.render(scene, camera);
 }
 animate();
+
 
 // Handle resizing
 window.addEventListener('resize', () => {
