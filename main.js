@@ -103,7 +103,7 @@ function createLabeledBuilding(x, z, label, logoURL = null) {
 // createLabeledBuilding(20, -10, 'Digital Product School');
 // createLabeledBuilding(0, 10, 'Workroom Automation');
 
-
+//Loading Office Building Model
 loader.load('./static/models/modern_office_building/scene.gltf', function ( gltf ) {
 
   gltf.scene.scale.set(30, 30, 30);
@@ -119,23 +119,41 @@ loader.load('./static/models/modern_office_building/scene.gltf', function ( gltf
 
 let mixer;
 
+let walkMixer, waveMixer;
+let walkingModel, wavingModel;
+const walkStart = new THREE.Vector3(50, 0, -50);
+const walkTarget = new THREE.Vector3(50, 0, 0);
+
+
+// Camera: Starts in front, looks at character path
+const initialCamPos = new THREE.Vector3(50, 10, 30); // camera closer to front
+const finalCamPos = new THREE.Vector3(50, 10, 60);   // camera gently backs away
+camera.position.copy(initialCamPos);
+camera.lookAt(walkStart);
+
+
+// Load Walking Model
+loader.load('./static/models/man_walking/scene.gltf', function (gltf) {
+  walkingModel = gltf.scene;
+  walkingModel.scale.set(5, 5, 5);
+  walkingModel.position.copy(walkStart);
+  scene.add(walkingModel);
+
+  walkMixer = new THREE.AnimationMixer(walkingModel);
+  gltf.animations.forEach(clip => walkMixer.clipAction(clip).play());
+}, undefined, console.error);
+
+
+// Load Waving Model
 loader.load('./static/models/man_waving_hand/scene.gltf', function (gltf) {
+  wavingModel = gltf.scene;
+  wavingModel.scale.set(5, 5, 5);
+  wavingModel.visible = false; // Hide initially
+  scene.add(wavingModel);
 
-  const model = gltf.scene;
-  model.scale.set(5, 5, 5);
-  model.position.set(50, 0, 0);
-  scene.add(model);
-
-  // Create the animation mixer and play the first animation
-  mixer = new THREE.AnimationMixer(model);
-
-  gltf.animations.forEach((clip) => {
-    mixer.clipAction(clip).play();
-  });
-
-}, undefined, function (error) {
-  console.error(error);
-});
+  waveMixer = new THREE.AnimationMixer(wavingModel);
+  gltf.animations.forEach(clip => waveMixer.clipAction(clip));
+}, undefined, console.error);
 
 // Trees
 for (let i = -40; i <= 40; i += 10) {
@@ -201,17 +219,58 @@ function createCurvedRoad(centerX, centerZ, radius, startAngle, endAngle) {
 const clock = new THREE.Clock();
 
 // Animate
-function animate() {
-  requestAnimationFrame(animate);
-  controls.update();
+// function animate() {
+//   requestAnimationFrame(animate);
+//   controls.update();
 
-  const delta = clock.getDelta();
+//   const delta = clock.getDelta();
 
-  if (mixer) mixer.update(delta);
+//   if (mixer) mixer.update(delta);
 
   
+//   renderer.render(scene, camera);
+// }
+
+
+function animate() {
+  requestAnimationFrame(animate);
+  const delta = clock.getDelta();
+
+  if (walkMixer) walkMixer.update(delta);
+  if (waveMixer) waveMixer.update(delta);
+
+  // Walk logic
+  if (walkingModel && walkingModel.visible) {
+    const speed = 5;
+    const distance = walkingModel.position.distanceTo(walkTarget);
+
+    if (distance > 0.1) {
+      const direction = walkTarget.clone().sub(walkingModel.position).normalize();
+      walkingModel.position.add(direction.multiplyScalar(speed * delta));
+
+      // 🎥 Move camera slightly back as he approaches
+      const t = 1 - (distance / walkStart.distanceTo(walkTarget));
+      camera.position.lerpVectors(initialCamPos, finalCamPos, t);
+      camera.lookAt(walkingModel.position.clone().add(new THREE.Vector3(0, 5, 0)));
+    } else {
+      // Stop walking and transition to wave
+      walkingModel.visible = false;
+      walkMixer.stopAllAction();
+
+      wavingModel.position.copy(walkTarget);
+      wavingModel.visible = true;
+
+      // 👀 Face the camera
+      wavingModel.lookAt(camera.position);
+
+      // 👋 Start waving
+      waveMixer.clipAction(waveMixer._actions[0]._clip).play();
+    }
+  }
+
   renderer.render(scene, camera);
 }
+
 animate();
 
 
