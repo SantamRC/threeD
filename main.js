@@ -232,6 +232,51 @@ const clock = new THREE.Clock();
 // }
 
 
+const nameTag = document.getElementById('nameTag');
+const actionButton = document.getElementById('actionButton');
+
+let uiShown = false;
+
+
+// function animate() {
+//   requestAnimationFrame(animate);
+//   const delta = clock.getDelta();
+
+//   if (walkMixer) walkMixer.update(delta);
+//   if (waveMixer) waveMixer.update(delta);
+
+//   // Walk logic
+//   if (walkingModel && walkingModel.visible) {
+//     const speed = 5;
+//     const distance = walkingModel.position.distanceTo(walkTarget);
+
+//     if (distance > 0.1) {
+//       const direction = walkTarget.clone().sub(walkingModel.position).normalize();
+//       walkingModel.position.add(direction.multiplyScalar(speed * delta));
+
+//       // 🎥 Move camera slightly back as he approaches
+//       const t = 1 - (distance / walkStart.distanceTo(walkTarget));
+//       camera.position.lerpVectors(initialCamPos, finalCamPos, t);
+//       camera.lookAt(walkingModel.position.clone().add(new THREE.Vector3(0, 5, 0)));
+//     } else {
+//       // Stop walking and transition to wave
+//       walkingModel.visible = false;
+//       walkMixer.stopAllAction();
+
+//       wavingModel.position.copy(walkTarget);
+//       wavingModel.visible = true;
+
+//       // 👀 Face the camera
+//       wavingModel.lookAt(camera.position);
+
+//       // 👋 Start waving
+//       waveMixer.clipAction(waveMixer._actions[0]._clip).play();
+//     }
+//   }
+
+//   renderer.render(scene, camera);
+// }
+
 function animate() {
   requestAnimationFrame(animate);
   const delta = clock.getDelta();
@@ -239,7 +284,6 @@ function animate() {
   if (walkMixer) walkMixer.update(delta);
   if (waveMixer) waveMixer.update(delta);
 
-  // Walk logic
   if (walkingModel && walkingModel.visible) {
     const speed = 5;
     const distance = walkingModel.position.distanceTo(walkTarget);
@@ -248,23 +292,27 @@ function animate() {
       const direction = walkTarget.clone().sub(walkingModel.position).normalize();
       walkingModel.position.add(direction.multiplyScalar(speed * delta));
 
-      // 🎥 Move camera slightly back as he approaches
       const t = 1 - (distance / walkStart.distanceTo(walkTarget));
       camera.position.lerpVectors(initialCamPos, finalCamPos, t);
       camera.lookAt(walkingModel.position.clone().add(new THREE.Vector3(0, 5, 0)));
     } else {
-      // Stop walking and transition to wave
       walkingModel.visible = false;
       walkMixer.stopAllAction();
 
       wavingModel.position.copy(walkTarget);
       wavingModel.visible = true;
-
-      // 👀 Face the camera
       wavingModel.lookAt(camera.position);
 
-      // 👋 Start waving
-      waveMixer.clipAction(waveMixer._actions[0]._clip).play();
+      const waveAction = waveMixer.clipAction(waveMixer._actions[0]._clip);
+      if (!waveAction.isRunning()) {
+        waveAction.play();
+
+        if (!uiShown) {
+          uiShown = true;
+          nameTag.style.opacity = 1;
+          actionButton.style.opacity = 1;
+        }
+      }
     }
   }
 
@@ -279,4 +327,10 @@ window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+
+
+actionButton.addEventListener('click', () => {
+  alert("You waved back! 😄");
 });
