@@ -113,18 +113,18 @@ function createLabeledBuilding(x, z, label, logoURL = null) {
 }
 
 // Add Buildings
-// createLabeledBuilding(-20, -10, 'Accenture', './static/accenture-logo.png');
-// createLabeledBuilding(0, -10, 'Travelexic');
-// createLabeledBuilding(20, -10, 'Digital Product School');
-// createLabeledBuilding(0, 10, 'Workroom Automation');
+createLabeledBuilding(-80, -20, 'Accenture', './static/accenture-logo.png');
+//createLabeledBuilding(0, -10, 'Travelexic');
+//createLabeledBuilding(40, -10, 'Digital Product School');
+createLabeledBuilding(-40, -20, 'Workroom Automation');
 
 
 
 const walkPoints = [
-  { position: new THREE.Vector3(40, 0, 0), company: "Travelexic" },
-  { position: new THREE.Vector3(0, 0, 0), company: "DPS" },
-  { position: new THREE.Vector3(-40, 0, 0), company: "Workroom" },
-  { position: new THREE.Vector3(-80, 0, 0), company: "Accenture" }
+  { position: new THREE.Vector3(40, 0, 0), company: "Digital Product School",message: "In the fall of 2021, I worked at Digital Product School as a React Native Developer Intern. I worked on making a Biomedical AI App" },
+  { position: new THREE.Vector3(0, 0, 0), company: "Workroom Automation",message: "In the Summer of 2022, I worked as a Frontend Develoepr at Workroom Automation where I developed the frontend from a Figma prototype using React.js, Material UI, and Context API." },
+  { position: new THREE.Vector3(-40, 0, 0), company: "Travelexic",message: "At the start of 2023 I worked a a Mobile Developer Intern at Travelexic. I worked on creating the entire UI of the app from mockups and integrated APIs into it" },
+  { position: new THREE.Vector3(-80, 0, 0), company: "Accenture",message: "Currently I am working as a Frontend Developer at Accenture with over 1.5 Years of Experience." }
 ];
 
 let currentIndex = 0;
@@ -140,8 +140,22 @@ const nextButton = document.getElementById("nextButton");
 //Loading Office Building Model
 loader.load('./static/models/modern_office_building/scene.gltf', function ( gltf ) {
 
-  gltf.scene.scale.set(30, 30, 30);
-  gltf.scene.position.set(0, 0, 0);
+  gltf.scene.scale.set(30, 30, 30)
+  gltf.scene.position.set(0, 0, -20);
+
+  scene.add( gltf.scene );
+
+}, undefined, function ( error ) {
+
+  console.error( error );
+
+} );
+
+//Loading Tokyo Building Model
+loader.load('./static/models/tokyo_building/scene.gltf', function ( gltf ) {
+
+  gltf.scene.scale.set(0.2, 0.2, 0.2);
+  gltf.scene.position.set(40, 0, -20);
 
   scene.add( gltf.scene );
 
@@ -153,12 +167,10 @@ loader.load('./static/models/modern_office_building/scene.gltf', function ( gltf
 
 
 
-
-
 let walkMixer, waveMixer;
 let walkingModel, wavingModel, idleModel;
-const walkStart = new THREE.Vector3(50, 0, -50);
-const walkTarget = new THREE.Vector3(50, 0, 0);
+const walkStart = new THREE.Vector3(70, 0, -50);
+const walkTarget = new THREE.Vector3(70, 0, 0);
 let sayingHi = true;  // Flag to check if the model is waving
 
 
@@ -292,14 +304,15 @@ function animate() {
   if (walkingModel && walkingModel.visible) {
     const speed = 5;
     const distance = walkingModel.position.distanceTo(walkTarget);
+    updateCinematicCamera();
 
     if (distance > 0.1) {
       const direction = walkTarget.clone().sub(walkingModel.position).normalize();
       walkingModel.position.add(direction.multiplyScalar(speed * delta));
 
       const t = 1 - (distance / walkStart.distanceTo(walkTarget));
-      camera.position.lerpVectors(initialCamPos, finalCamPos, t);
-      camera.lookAt(walkingModel.position.clone().add(new THREE.Vector3(0, 5, 0)));
+      //camera.position.lerpVectors(initialCamPos, finalCamPos, t);
+      //camera.lookAt(walkingModel.position.clone().add(new THREE.Vector3(0, 5, 0)));
     } else if(sayingHi && distance <= 0.1) {
       walkingModel.visible = false;
       walkMixer.stopAllAction();
@@ -328,7 +341,7 @@ function animate() {
 
       idleModel.lookAt(camera.position);
 
-      popupText.textContent = `I worked at ${walkPoints[currentIndex].company}`;
+      popupText.textContent = `${walkPoints[currentIndex].message}`;
       infoPopup.style.opacity = 1;
 
       isWalking = false;
@@ -410,3 +423,19 @@ function moveToNextPoint() {
 nextButton.addEventListener("click", () => {
   moveToNextPoint();
 });
+
+
+
+function updateCinematicCamera() {
+  // Offset: from the side (Z axis) and a bit above
+  const offset = new THREE.Vector3(0, 20, 50);
+
+  // Calculate new camera position
+  const targetPos = walkingModel.position.clone().add(offset);
+
+  // Smooth camera movement using lerp
+  camera.position.lerp(targetPos, 0.1);
+
+  // Always look at the character
+  camera.lookAt(walkingModel.position);
+}
