@@ -2,10 +2,25 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
+const loadingManager = new THREE.LoadingManager();
+
+let assetsLoaded = false;
+
+// Loader DOM
+const loaderScreen = document.getElementById('loader');
+
+// Track loading
+loadingManager.onLoad = function () {
+  console.log('All assets loaded!');
+  loaderScreen.style.display = 'none'; // Hide loader
+  assetsLoaded = true;
+  animate(); // Start animation only after everything is ready
+};
+
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xa0d0ff);
 
-const loader = new GLTFLoader();
+const loader = new GLTFLoader(loadingManager);
 
 // Camera & Renderer
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -117,19 +132,40 @@ loader.load('./static/models/modern_office_building/scene.gltf', function ( gltf
 
 } );
 
-let mixer;
+
+
+
 
 let walkMixer, waveMixer;
-let walkingModel, wavingModel;
+let walkingModel, wavingModel, idleModel;
 const walkStart = new THREE.Vector3(50, 0, -50);
 const walkTarget = new THREE.Vector3(50, 0, 0);
+let sayingHi = true;  // Flag to check if the model is waving
+
+
+//Loading Idle Man Model
+loader.load('./static/models/idle_man/scene.gltf', function (gltf) {
+
+  idleModel = gltf.scene;
+
+  idleModel.scale.set(5, 5, 5);
+  idleModel.position.set(walkTarget);
+  idleModel.visible = false; // Hide initially
+
+  scene.add(idleModel);
+
+}, undefined, function (error) {
+
+  console.error(error);
+
+});
 
 
 // Camera: Starts in front, looks at character path
-const initialCamPos = new THREE.Vector3(50, 10, 30); // camera closer to front
+const initialCamPos = new THREE.Vector3(70, 0, 30); // camera closer to front
 const finalCamPos = new THREE.Vector3(50, 10, 60);   // camera gently backs away
 camera.position.copy(initialCamPos);
-camera.lookAt(walkStart);
+camera.lookAt(new THREE.Vector3(0, 0, 0));
 
 
 // Load Walking Model
@@ -192,6 +228,7 @@ function createStraightRoad(x, z, length, isHorizontal = true) {
   road.position.set(x, 0.05, z);
   scene.add(road);
 }
+
 function createCurvedRoad(centerX, centerZ, radius, startAngle, endAngle) {
   const curve = new THREE.ArcCurve(centerX, centerZ, radius, startAngle, endAngle, false);
   const points = curve.getSpacedPoints(50);
@@ -218,19 +255,6 @@ function createCurvedRoad(centerX, centerZ, radius, startAngle, endAngle) {
 
 const clock = new THREE.Clock();
 
-// Animate
-// function animate() {
-//   requestAnimationFrame(animate);
-//   controls.update();
-
-//   const delta = clock.getDelta();
-
-//   if (mixer) mixer.update(delta);
-
-  
-//   renderer.render(scene, camera);
-// }
-
 
 const nameTag = document.getElementById('nameTag');
 const actionButton = document.getElementById('actionButton');
@@ -238,44 +262,6 @@ const actionButton = document.getElementById('actionButton');
 let uiShown = false;
 
 
-// function animate() {
-//   requestAnimationFrame(animate);
-//   const delta = clock.getDelta();
-
-//   if (walkMixer) walkMixer.update(delta);
-//   if (waveMixer) waveMixer.update(delta);
-
-//   // Walk logic
-//   if (walkingModel && walkingModel.visible) {
-//     const speed = 5;
-//     const distance = walkingModel.position.distanceTo(walkTarget);
-
-//     if (distance > 0.1) {
-//       const direction = walkTarget.clone().sub(walkingModel.position).normalize();
-//       walkingModel.position.add(direction.multiplyScalar(speed * delta));
-
-//       // 🎥 Move camera slightly back as he approaches
-//       const t = 1 - (distance / walkStart.distanceTo(walkTarget));
-//       camera.position.lerpVectors(initialCamPos, finalCamPos, t);
-//       camera.lookAt(walkingModel.position.clone().add(new THREE.Vector3(0, 5, 0)));
-//     } else {
-//       // Stop walking and transition to wave
-//       walkingModel.visible = false;
-//       walkMixer.stopAllAction();
-
-//       wavingModel.position.copy(walkTarget);
-//       wavingModel.visible = true;
-
-//       // 👀 Face the camera
-//       wavingModel.lookAt(camera.position);
-
-//       // 👋 Start waving
-//       waveMixer.clipAction(waveMixer._actions[0]._clip).play();
-//     }
-//   }
-
-//   renderer.render(scene, camera);
-// }
 
 function animate() {
   requestAnimationFrame(animate);
@@ -295,13 +281,14 @@ function animate() {
       const t = 1 - (distance / walkStart.distanceTo(walkTarget));
       camera.position.lerpVectors(initialCamPos, finalCamPos, t);
       camera.lookAt(walkingModel.position.clone().add(new THREE.Vector3(0, 5, 0)));
-    } else {
+    } else if(sayingHi && distance <= 0.1) {
       walkingModel.visible = false;
       walkMixer.stopAllAction();
-
       wavingModel.position.copy(walkTarget);
       wavingModel.visible = true;
       wavingModel.lookAt(camera.position);
+
+      sayingHi = false;
 
       const waveAction = waveMixer.clipAction(waveMixer._actions[0]._clip);
       if (!waveAction.isRunning()) {
@@ -313,13 +300,21 @@ function animate() {
           actionButton.style.opacity = 1;
         }
       }
+    }else{
+      walkingModel.visible = false;
+      walkMixer.stopAllAction();
+
+      idleModel.position.copy(walkTarget);
+      idleModel.visible = true;
+
+      idleModel.lookAt(camera.position);
     }
   }
 
   renderer.render(scene, camera);
 }
 
-animate();
+//animate();
 
 
 // Handle resizing
@@ -330,7 +325,29 @@ window.addEventListener('resize', () => {
 });
 
 
+actionButton.addEventListener("click", () => {
+  // Hide UI
+  nameTag.style.opacity = 0;
+  actionButton.style.opacity = 0;
+  uiShown = false;
 
-actionButton.addEventListener('click', () => {
-  alert("You waved back! 😄");
+  // Set new walk start and target
+  walkStart.copy(walkTarget); // current position
+  walkTarget.set(40, 0, 0);     // new target position
+
+  // Hide waving model
+  wavingModel.visible = false;
+
+  // Reset walking model to current position
+  walkingModel.position.copy(walkStart);
+  walkingModel.visible = true;
+
+  // Look toward the new target
+  walkingModel.lookAt(walkTarget);
+
+  // Play walking animation again
+  walkMixer.clipAction(walkMixer._actions[0]._clip).reset().play();
 });
+
+
+
