@@ -118,6 +118,25 @@ function createLabeledBuilding(x, z, label, logoURL = null) {
 // createLabeledBuilding(20, -10, 'Digital Product School');
 // createLabeledBuilding(0, 10, 'Workroom Automation');
 
+
+
+const walkPoints = [
+  { position: new THREE.Vector3(40, 0, 0), company: "Travelexic" },
+  { position: new THREE.Vector3(0, 0, 0), company: "DPS" },
+  { position: new THREE.Vector3(-40, 0, 0), company: "Workroom" },
+  { position: new THREE.Vector3(-80, 0, 0), company: "Accenture" }
+];
+
+let currentIndex = 0;
+let isWalking = false;
+
+
+const infoPopup = document.getElementById("infoPopup");
+const popupText = document.getElementById("popupText");
+const nextButton = document.getElementById("nextButton");
+
+
+
 //Loading Office Building Model
 loader.load('./static/models/modern_office_building/scene.gltf', function ( gltf ) {
 
@@ -308,6 +327,12 @@ function animate() {
       idleModel.visible = true;
 
       idleModel.lookAt(camera.position);
+
+      popupText.textContent = `I worked at ${walkPoints[currentIndex].company}`;
+      infoPopup.style.opacity = 1;
+
+      isWalking = false;
+      currentIndex++;
     }
   }
 
@@ -325,29 +350,63 @@ window.addEventListener('resize', () => {
 });
 
 
+// actionButton.addEventListener("click", () => {
+//   // Hide UI
+//   nameTag.style.opacity = 0;
+//   actionButton.style.opacity = 0;
+//   uiShown = false;
+
+//   // Set new walk start and target
+//   walkStart.copy(walkTarget); // current position
+//   walkTarget.set(40, 0, 0);     // new target position
+
+//   // Hide waving model
+//   wavingModel.visible = false;
+
+//   // Reset walking model to current position
+//   walkingModel.position.copy(walkStart);
+//   walkingModel.visible = true;
+
+//   // Look toward the new target
+//   walkingModel.lookAt(walkTarget);
+
+//   // Play walking animation again
+//   walkMixer.clipAction(walkMixer._actions[0]._clip).reset().play();
+// });
+
+
+
 actionButton.addEventListener("click", () => {
-  // Hide UI
+  moveToNextPoint();
+})
+
+
+
+function moveToNextPoint() {
+  if (currentIndex >= walkPoints.length) return;
+
   nameTag.style.opacity = 0;
   actionButton.style.opacity = 0;
   uiShown = false;
 
-  // Set new walk start and target
-  walkStart.copy(walkTarget); // current position
-  walkTarget.set(40, 0, 0);     // new target position
+  const nextPoint = walkPoints[currentIndex];
+  walkStart.copy(walkingModel.position);
+  walkTarget.copy(nextPoint.position);
 
-  // Hide waving model
-  wavingModel.visible = false;
-
-  // Reset walking model to current position
+  // Reset and show walking model
   walkingModel.position.copy(walkStart);
+  walkingModel.lookAt(walkTarget);
+  idleModel.visible = false;
+  wavingModel.visible = false;
   walkingModel.visible = true;
 
-  // Look toward the new target
-  walkingModel.lookAt(walkTarget);
-
-  // Play walking animation again
+  // Start walking animation
   walkMixer.clipAction(walkMixer._actions[0]._clip).reset().play();
+  infoPopup.style.opacity = 0;
+  isWalking = true;
+}
+
+
+nextButton.addEventListener("click", () => {
+  moveToNextPoint();
 });
-
-
-

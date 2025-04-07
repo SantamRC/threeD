@@ -44,29 +44,10 @@
       Loading scene...
     </div>
     
-    <div id="popup" style="
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0,0,0,0.7);
-      color: white;
-      padding: 12px 24px;
-      font-family: sans-serif;
-      border-radius: 12px;
-      font-size: 18px;
-      display: none;
-      text-align: center;
-    ">
-      <div id="popupMessage">Hi!</div>
-      <button id="nextBtn" style="
-        margin-top: 10px;
-        padding: 8px 16px;
-        background: #3498db;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-      ">Next?</button>
+    <div id="infoPopup" style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+        background: white; padding: 10px 20px; border-radius: 10px; opacity: 0; transition: opacity 0.5s;">
+      <p id="popupText"></p>
+      <button id="nextButton" style="margin-top: 10px;">Next?</button>
     </div>
   </body>
 </html>
