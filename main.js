@@ -116,7 +116,7 @@ function createLabeledBuilding(x, z, label, logoURL = null) {
 createLabeledBuilding(-80, -20, 'Accenture', './static/accenture-logo.png');
 //createLabeledBuilding(0, -10, 'Travelexic');
 //createLabeledBuilding(40, -10, 'Digital Product School');
-createLabeledBuilding(-40, -20, 'Workroom Automation');
+createLabeledBuilding(-40, -20, 'Travelexic');
 
 
 
